@@ -2,210 +2,58 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Crates Game</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crates Game</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-<h1>Crates Game</h1>
+<header>
+<h1>Crates</h1>
+<div id="moneyDisplay"></div>
+</header>
 
-<h2 id="moneyDisplay">Money: $0</h2>
-
-<!-- NAV -->
+<nav>
 <button onclick="showTab('cratesTab')">Crates</button>
 <button onclick="showTab('inventoryTab')">Inventory</button>
+</nav>
 
-<hr>
+<main>
 
-<!-- ================= CRATES TAB ================= -->
-<div id="cratesTab">
-
+<section id="cratesTab" class="tab">
 <h2>Open Crates</h2>
-<div id="crateContainer"></div>
+<div id="crateContainer" class="grid"></div>
 
-</div>
+<div id="openResult" class="result"></div>
+</section>
 
-<!-- ================= INVENTORY TAB ================= -->
-<div id="inventoryTab" style="display:none;">
-
+<section id="inventoryTab" class="tab hidden">
 <h2>Inventory</h2>
 
-<button onclick="sellAll()">Sell All Items</button>
+<div class="controls">
+<select id="sortSelect" onchange="renderInventory()">
+<option value="value">Sort: Value</option>
+<option value="rarity">Sort: Rarity</option>
+<option value="name">Sort: Name</option>
+</select>
 
-<ul id="inventoryList"></ul>
+<select id="filterSelect" onchange="renderInventory()">
+<option value="all">All</option>
+<option value="Common">Common</option>
+<option value="Rare">Rare</option>
+<option value="Epic">Epic</option>
+<option value="Legendary">Legendary</option>
+</select>
 
+<button onclick="sellAll()">Sell All</button>
 </div>
 
-<script>
+<ul id="inventoryList"></ul>
+</section>
 
-/* ============================
-   SAVE SYSTEM
-============================ */
+</main>
 
-let gameData = JSON.parse(localStorage.getItem("crateGameSave")) || {
-    money: 500,
-    inventory: []
-};
-
-function saveGame() {
-    localStorage.setItem("crateGameSave", JSON.stringify(gameData));
-}
-
-/* ============================
-   ITEMS + CRATES
-============================ */
-
-const itemPool = [
-    { name: "Common Scrap", value: 5, rarity: "Common" },
-    { name: "Metal Plate", value: 15, rarity: "Common" },
-    { name: "Silver Gear", value: 40, rarity: "Rare" },
-    { name: "Golden Core", value: 120, rarity: "Epic" },
-    { name: "Diamond Chip", value: 300, rarity: "Legendary" }
-];
-
-const crates = [
-    { name: "Wood Crate", cost: 25 },
-    { name: "Iron Crate", cost: 50 },
-    { name: "Tech Crate", cost: 75 },
-    { name: "Industrial Crate", cost: 100 },
-    { name: "Military Crate", cost: 150 },
-    { name: "Elite Crate", cost: 200 },
-    { name: "Crystal Crate", cost: 300 },
-    { name: "Quantum Crate", cost: 400 },
-    { name: "Void Crate", cost: 600 },
-    { name: "Mythic Crate", cost: 1000 }
-];
-
-/* ============================
-   RANDOM ITEM LOGIC
-============================ */
-
-function getRandomItem() {
-    const rand = Math.random();
-
-    if (rand < 0.55) return itemPool[0];
-    if (rand < 0.80) return itemPool[1];
-    if (rand < 0.93) return itemPool[2];
-    if (rand < 0.99) return itemPool[3];
-    return itemPool[4];
-}
-
-/* ============================
-   UI UPDATE FUNCTIONS
-============================ */
-
-function updateMoney() {
-    document.getElementById("moneyDisplay").textContent =
-        "Money: $" + gameData.money;
-}
-
-function renderCrates() {
-    const container = document.getElementById("crateContainer");
-    container.innerHTML = "";
-
-    crates.forEach((crate, index) => {
-        const btn = document.createElement("button");
-
-        btn.textContent =
-            `${crate.name} ($${crate.cost})`;
-
-        btn.onclick = () => openCrate(index);
-
-        container.appendChild(btn);
-        container.appendChild(document.createElement("br"));
-    });
-}
-
-function renderInventory() {
-    const list = document.getElementById("inventoryList");
-    list.innerHTML = "";
-
-    gameData.inventory.forEach((item, index) => {
-        const li = document.createElement("li");
-
-        li.textContent =
-            `${item.name} - ${item.rarity} ($${item.value}) `;
-
-        const sellBtn = document.createElement("button");
-        sellBtn.textContent = "Sell";
-        sellBtn.onclick = () => sellItem(index);
-
-        li.appendChild(sellBtn);
-        list.appendChild(li);
-    });
-}
-
-/* ============================
-   GAME ACTIONS
-============================ */
-
-function openCrate(index) {
-    const crate = crates[index];
-
-    if (gameData.money < crate.cost) {
-        alert("Not enough money!");
-        return;
-    }
-
-    gameData.money -= crate.cost;
-
-    const reward = getRandomItem();
-    gameData.inventory.push({...reward});
-
-    alert(`You got: ${reward.name}!`);
-
-    saveGame();
-    updateMoney();
-    renderInventory();
-}
-
-function sellItem(index) {
-    const item = gameData.inventory[index];
-
-    gameData.money += item.value;
-    gameData.inventory.splice(index, 1);
-
-    saveGame();
-    updateMoney();
-    renderInventory();
-}
-
-function sellAll() {
-    let total = 0;
-
-    gameData.inventory.forEach(item => {
-        total += item.value;
-    });
-
-    gameData.money += total;
-    gameData.inventory = [];
-
-    saveGame();
-    updateMoney();
-    renderInventory();
-}
-
-/* ============================
-   TAB SYSTEM
-============================ */
-
-function showTab(tabId) {
-    document.getElementById("cratesTab").style.display = "none";
-    document.getElementById("inventoryTab").style.display = "none";
-
-    document.getElementById(tabId).style.display = "block";
-}
-
-/* ============================
-   INITIAL LOAD
-============================ */
-
-updateMoney();
-renderCrates();
-renderInventory();
-
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
