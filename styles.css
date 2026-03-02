@@ -1,0 +1,46 @@
+body {
+font-family: Arial, sans-serif;
+margin: 20px;
+}
+
+header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.grid {
+display: grid;
+grid-template-columns: repeat(auto-fill,minmax(160px,1fr));
+gap: 10px;
+}
+
+.tab.hidden { display:none; }
+
+button { cursor:pointer; }
+
+.result {
+margin-top:20px;
+padding:15px;
+border:1px solid #ccc;
+min-height:40px;
+transition: transform .3s ease, opacity .3s ease;
+}
+
+.result.animate {
+transform: scale(1.1);
+opacity:0.6;
+}
+
+/* Rarity Colors */
+.Common { color: gray; }
+.Rare { color: royalblue; }
+.Epic { color: purple; }
+.Legendary { color: orange; font-weight:bold; }
+
+.inventory-item {
+display:flex;
+justify-content:space-between;
+padding:6px 0;
+border-bottom:1px solid #eee;
+}
