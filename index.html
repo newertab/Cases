@@ -1,17 +1,164 @@
+# Crates Game — Single File Professional Version
+
+Below is a **fully self‑contained `index.html`**.
+
+Features:
+
+* Professional modern UI (no external libraries)
+* Smooth crate opening animation
+* Weighted loot tables per crate
+* Stackable inventory
+* Sorting + filtering
+* Rarity color + glow system
+* Sell individual / Sell all
+* Persistent save system (localStorage)
+* Modular architecture inside one file
+
+---
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Crates Game</title>
-<link rel="stylesheet" href="styles.css">
+<title>Crates</title>
+
+<style>
+/* ================= ROOT ================= */
+:root{
+--bg:#0f1220;
+--panel:#181c2f;
+--panel2:#212544;
+--accent:#4da3ff;
+--text:#e6ecff;
+--muted:#9aa4c7;
+}
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Segoe UI,Arial,sans-serif;
+background:linear-gradient(180deg,#0b0e1a,#151935);
+color:var(--text);
+}
+
+h1,h2{margin:0}
+button{
+background:var(--panel2);
+border:none;
+color:white;
+padding:10px 14px;
+border-radius:8px;
+cursor:pointer;
+transition:.15s;
+}
+button:hover{background:#2a2f5f}
+
+/* ================= LAYOUT ================= */
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px;
+background:#0a0d1c;
+border-bottom:1px solid #2a2f55;
+}
+
+nav{
+display:flex;
+gap:10px;
+padding:15px;
+background:#111530;
+}
+
+main{padding:20px}
+
+.panel{
+background:var(--panel);
+padding:20px;
+border-radius:14px;
+box-shadow:0 8px 25px rgba(0,0,0,.35);
+}
+
+.hidden{display:none}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+gap:14px;
+}
+
+/* ================= CRATE CARDS ================= */
+.crate{
+background:var(--panel2);
+padding:16px;
+border-radius:12px;
+text-align:center;
+transition:.2s;
+}
+.crate:hover{transform:translateY(-4px)}
+
+.price{color:var(--muted);font-size:14px}
+
+/* ================= RESULT ================= */
+#resultBox{
+margin-top:20px;
+padding:25px;
+text-align:center;
+border-radius:12px;
+background:#0b0f25;
+min-height:70px;
+font-size:20px;
+}
+
+.spin{
+animation:spin .5s ease}
+@keyframes spin{
+0%{transform:scale(.8);opacity:.2}
+50%{transform:scale(1.15)}
+100%{transform:scale(1);opacity:1}
+}
+
+/* ================= INVENTORY ================= */
+.inventory-item{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px;
+border-bottom:1px solid #2b2f55;
+}
+
+.controls{
+display:flex;
+gap:10px;
+margin-bottom:15px;
+flex-wrap:wrap;
+}
+
+select{
+background:var(--panel2);
+color:white;
+border:none;
+padding:8px;
+border-radius:6px;
+}
+
+/* ================= RARITY COLORS ================= */
+.Common{color:#b0b6d6}
+.Rare{color:#4da3ff}
+.Epic{color:#c16bff;text-shadow:0 0 8px #c16bff88}
+.Legendary{color:#ffb347;text-shadow:0 0 12px #ffb347aa}
+
+</style>
 </head>
 
 <body>
 
 <header>
-<h1>Crates</h1>
-<div id="moneyDisplay"></div>
+<h1>CRATES</h1>
+<h2 id="money"></h2>
 </header>
 
 <nav>
@@ -21,39 +168,206 @@
 
 <main>
 
-<section id="cratesTab" class="tab">
+<section id="cratesTab" class="panel">
 <h2>Open Crates</h2>
-<div id="crateContainer" class="grid"></div>
-
-<div id="openResult" class="result"></div>
+<div id="crateGrid" class="grid"></div>
+<div id="resultBox">Open a crate…</div>
 </section>
 
-<section id="inventoryTab" class="tab hidden">
+<section id="inventoryTab" class="panel hidden">
 <h2>Inventory</h2>
 
 <div class="controls">
 <select id="sortSelect" onchange="renderInventory()">
-<option value="value">Sort: Value</option>
-<option value="rarity">Sort: Rarity</option>
-<option value="name">Sort: Name</option>
+<option value="value">Sort by Value</option>
+<option value="name">Sort by Name</option>
+<option value="rarity">Sort by Rarity</option>
 </select>
 
 <select id="filterSelect" onchange="renderInventory()">
 <option value="all">All</option>
-<option value="Common">Common</option>
-<option value="Rare">Rare</option>
-<option value="Epic">Epic</option>
-<option value="Legendary">Legendary</option>
+<option>Common</option>
+<option>Rare</option>
+<option>Epic</option>
+<option>Legendary</option>
 </select>
 
 <button onclick="sellAll()">Sell All</button>
 </div>
 
-<ul id="inventoryList"></ul>
+<div id="inventoryList"></div>
 </section>
 
 </main>
 
-<script src="script.js"></script>
+<script>
+/* ================= SAVE ================= */
+
+let game = JSON.parse(localStorage.getItem("crateGameV2")) || {
+ money:500,
+ inventory:{}
+};
+
+function save(){
+ localStorage.setItem("crateGameV2",JSON.stringify(game));
+}
+
+/* ================= DATA ================= */
+
+const items={
+Common:[{name:"Scrap",value:5},{name:"Bolts",value:8}],
+Rare:[{name:"Silver Gear",value:40}],
+Epic:[{name:"Energy Core",value:120}],
+Legendary:[{name:"Quantum Crystal",value:300}]
+};
+
+const crates=[
+{name:"Wood",cost:25,weights:{Common:70,Rare:25,Epic:4,Legendary:1}},
+{name:"Iron",cost:75,weights:{Common:50,Rare:35,Epic:12,Legendary:3}},
+{name:"Elite",cost:200,weights:{Common:20,Rare:45,Epic:25,Legendary:10}},
+{name:"Mythic",cost:500,weights:{Common:5,Rare:30,Epic:40,Legendary:25}}
+];
+
+/* ================= WEIGHTED RNG ================= */
+
+function rollRarity(weights){
+ const total=Object.values(weights).reduce((a,b)=>a+b,0);
+ let r=Math.random()*total;
+ for(const key in weights){
+  if(r<weights[key]) return key;
+  r-=weights[key];
+ }
+}
+
+function getItem(crate){
+ const rarity=rollRarity(crate.weights);
+ const pool=items[rarity];
+ const item=pool[Math.floor(Math.random()*pool.length)];
+ return {...item,rarity};
+}
+
+/* ================= UI ================= */
+
+function updateMoney(){
+ document.getElementById("money").textContent=`$${game.money}`;
+}
+
+function showTab(id){
+ document.querySelectorAll("section").forEach(s=>s.classList.add("hidden"));
+ document.getElementById(id).classList.remove("hidden");
+}
+
+function renderCrates(){
+ const grid=document.getElementById("crateGrid");
+ grid.innerHTML="";
+
+ crates.forEach((c,i)=>{
+  const div=document.createElement("div");
+  div.className="crate";
+
+  div.innerHTML=`
+  <h3>${c.name} Crate</h3>
+  <div class="price">$${c.cost}</div>
+  <br>
+  <button onclick="openCrate(${i})">Open</button>
+  `;
+
+  grid.appendChild(div);
+ });
+}
+
+/* ================= INVENTORY ================= */
+
+function addItem(item){
+ if(!game.inventory[item.name]){
+  game.inventory[item.name]={...item,qty:0};
+ }
+ game.inventory[item.name].qty++;
+}
+
+function renderInventory(){
+ const list=document.getElementById("inventoryList");
+ list.innerHTML="";
+
+ let arr=Object.values(game.inventory);
+
+ const filter=document.getElementById("filterSelect").value;
+ if(filter!=="all") arr=arr.filter(i=>i.rarity===filter);
+
+ const sort=document.getElementById("sortSelect").value;
+ arr.sort((a,b)=>{
+  if(sort==="value") return b.value-a.value;
+  if(sort==="name") return a.name.localeCompare(b.name);
+  if(sort==="rarity") return a.rarity.localeCompare(b.rarity);
+ });
+
+ arr.forEach(item=>{
+  const row=document.createElement("div");
+  row.className="inventory-item";
+
+  row.innerHTML=`
+  <span class="${item.rarity}">${item.name} x${item.qty} ($${item.value})</span>
+  <button onclick="sellItem('${item.name}')">Sell</button>
+  `;
+
+  list.appendChild(row);
+ });
+}
+
+/* ================= ACTIONS ================= */
+
+function openCrate(i){
+ const crate=crates[i];
+ if(game.money<crate.cost) return alert("Not enough money");
+
+ game.money-=crate.cost;
+ const reward=getItem(crate);
+ addItem(reward);
+
+ const box=document.getElementById("resultBox");
+ box.classList.remove("spin");
+ void box.offsetWidth;
+ box.classList.add("spin");
+
+ box.innerHTML=`You got: <span class="${reward.rarity}">${reward.name}</span>`;
+
+ save();
+ updateMoney();
+ renderInventory();
+}
+
+function sellItem(name){
+ const item=game.inventory[name];
+ game.money+=item.value;
+ item.qty--;
+ if(item.qty<=0) delete game.inventory[name];
+ save();
+ updateMoney();
+ renderInventory();
+}
+
+function sellAll(){
+ let total=0;
+ Object.values(game.inventory).forEach(i=>{
+  total+=i.value*i.qty;
+ });
+ game.money+=total;
+ game.inventory={};
+ save();
+ updateMoney();
+ renderInventory();
+}
+
+/* ================= INIT ================= */
+updateMoney();
+renderCrates();
+renderInventory();
+</script>
+
 </body>
 </html>
+```
+
+---
+
+This version is intentionally structured like a scalable production prototype while remaining a **single deployable file**.
