@@ -266,14 +266,13 @@ Cost: $<span id="crateCost"></span>
 </div>
 
 <script>
+let money = 500
+let inventoryItems = []
+let selectedCrate = null
+let opening = false
 
-let money=500
-let inventoryItems=[]
-let selectedCrate=null
-let opening=false
+const crates = [
 
-const crates=[
-  
 {
 name:"Bug Crate",
 cost:15,
@@ -451,138 +450,159 @@ items:[
 
 ]
 
-function rollItem(crate){
-let r=Math.random()*100
-let sum=0
-for(let item of crate.items){
-sum+=item.chance
-if(r<=sum)return item
-}
-return crate.items[crate.items.length-1]
+// ---------------- SAVE / LOAD ----------------
+
+function saveData() {
+  localStorage.setItem("money", money)
+  localStorage.setItem("inventory", JSON.stringify(inventoryItems))
 }
 
-function updateMoney(){moneyEl.textContent=money}
+function loadData() {
+  const savedMoney = localStorage.getItem("money")
+  const savedInventory = localStorage.getItem("inventory")
 
-function renderInventory(){
-inventory.innerHTML=""
-inventoryItems.forEach(i=>{
-const d=document.createElement("div")
-d.className="itemBox "+i.rarity
-d.innerHTML=`<span class="emoji">${i.emoji}</span>$${i.value}`
-inventory.appendChild(d)
-})
+  if (savedMoney !== null) money = parseInt(savedMoney)
+  if (savedInventory !== null) inventoryItems = JSON.parse(savedInventory)
 }
 
-function renderCrates(){
-cratesTab.innerHTML="<h3>Crates</h3><div class='grid'></div>"
-const grid=cratesTab.querySelector(".grid")
+// ---------------- UTILITY ----------------
 
-crates.forEach((c,i)=>{
-const d=document.createElement("div")
-d.className="crate"
-d.innerHTML=`<h3>${c.name}</h3>
+function rollItem(crate) {
+  let r = Math.random() * 100
+  let sum = 0
+  for (let item of crate.items) {
+    sum += item.chance
+    if (r <= sum) return item
+  }
+  return crate.items[crate.items.length - 1]
+}
+
+function updateMoney() {
+  moneyEl.textContent = money
+  saveData() // Save whenever money changes
+}
+
+function renderInventory() {
+  inventory.innerHTML = ""
+  inventoryItems.forEach(i => {
+    const d = document.createElement("div")
+    d.className = "itemBox " + i.rarity
+    d.innerHTML = `<span class="emoji">${i.emoji}</span>$${i.value}`
+    inventory.appendChild(d)
+  })
+  saveData() // Save whenever inventory changes
+}
+
+// ---------------- RENDER ----------------
+
+function renderCrates() {
+  cratesTab.innerHTML = "<h3>Crates</h3><div class='grid'></div>"
+  const grid = cratesTab.querySelector(".grid")
+
+  crates.forEach((c, i) => {
+    const d = document.createElement("div")
+    d.className = "crate"
+    d.innerHTML = `<h3>${c.name}</h3>
 <p>$${c.cost}</p>
 <button onclick="selectCrate(${i})">Open</button>`
-grid.appendChild(d)
-})
+    grid.appendChild(d)
+  })
 }
 
-function showTab(id){
-if(opening)return
-cratesTab.classList.add("hidden")
-inventoryTab.classList.add("hidden")
-openScreen.classList.add("hidden")
-document.getElementById(id).classList.remove("hidden")
+function showTab(id) {
+  if (opening) return
+  cratesTab.classList.add("hidden")
+  inventoryTab.classList.add("hidden")
+  openScreen.classList.add("hidden")
+  document.getElementById(id).classList.remove("hidden")
 }
 
-function selectCrate(i){
-selectedCrate=crates[i]
-showTab("openScreen")
-crateTitle.textContent=selectedCrate.name
-crateCost.textContent=selectedCrate.cost
-lootTable.innerHTML=""
+function selectCrate(i) {
+  selectedCrate = crates[i]
+  showTab("openScreen")
+  crateTitle.textContent = selectedCrate.name
+  crateCost.textContent = selectedCrate.cost
+  lootTable.innerHTML = ""
 
-selectedCrate.items.forEach(x=>{
-const d=document.createElement("div")
-d.className="itemBox "+x.rarity
-d.innerHTML=`<span class="emoji">${x.emoji}</span>$${x.value}<br>${x.chance}%`
-lootTable.appendChild(d)
-})
+  selectedCrate.items.forEach(x => {
+    const d = document.createElement("div")
+    d.className = "itemBox " + x.rarity
+    d.innerHTML = `<span class="emoji">${x.emoji}</span>$${x.value}<br>${x.chance}%`
+    lootTable.appendChild(d)
+  })
 }
 
-function backToCrates(){
-if(opening)return
-spinTrack.innerHTML=""
-spinTrack.style.transform="translateX(0)"
-showTab("cratesTab")
+function backToCrates() {
+  if (opening) return
+  spinTrack.innerHTML = ""
+  spinTrack.style.transform = "translateX(0)"
+  showTab("cratesTab")
 }
 
-function openCrate(){
+// ---------------- OPEN CRATE ----------------
 
-if(opening||money<selectedCrate.cost)return
+function openCrate() {
+  if (opening || money < selectedCrate.cost) return
 
-opening=true
-openBtn.disabled=true
-backBtn.disabled=true
+  opening = true
+  openBtn.disabled = true
+  backBtn.disabled = true
 
-money-=selectedCrate.cost
-updateMoney()
+  money -= selectedCrate.cost
+  updateMoney()
 
-spinTrack.style.transition="none"
-spinTrack.style.transform="translateX(0)"
-spinTrack.innerHTML=""
+  spinTrack.style.transition = "none"
+  spinTrack.style.transform = "translateX(0)"
+  spinTrack.innerHTML = ""
 
-spinTrack.offsetHeight
+  spinTrack.offsetHeight
 
-const winner=rollItem(selectedCrate)
+  const winner = rollItem(selectedCrate)
 
-const reel=[]
-for(let i=0;i<80;i++){
-reel.push(selectedCrate.items[Math.floor(Math.random()*selectedCrate.items.length)])
+  const reel = []
+  for (let i = 0; i < 80; i++) {
+    reel.push(selectedCrate.items[Math.floor(Math.random() * selectedCrate.items.length)])
+  }
+
+  const winIndex = 60
+  reel[winIndex] = winner
+
+  reel.forEach(item => {
+    const div = document.createElement("div")
+    div.className = "spinItem " + item.rarity
+    div.innerHTML = `<span class="emoji">${item.emoji}</span>$${item.value}`
+    spinTrack.appendChild(div)
+  })
+
+  const containerWidth = spinTrack.parentElement.clientWidth
+  const winEl = spinTrack.children[winIndex]
+  const itemCenter = winEl.offsetLeft + winEl.offsetWidth / 2
+  const target = -(itemCenter - containerWidth / 2)
+
+  setTimeout(() => {
+    spinTrack.style.transition = "transform 4.5s cubic-bezier(.08,.6,.2,1)"
+    spinTrack.style.transform = `translateX(${target}px)`
+  }, 20)
+
+  setTimeout(() => {
+    inventoryItems.push(winner)
+    renderInventory()
+
+    money += winner.value
+    updateMoney()
+
+    opening = false
+    openBtn.disabled = false
+    backBtn.disabled = false
+  }, 4500)
 }
 
-const winIndex=60
-reel[winIndex]=winner
+// ---------------- INITIALIZE ----------------
 
-reel.forEach(item=>{
-const div=document.createElement("div")
-div.className="spinItem "+item.rarity
-div.innerHTML=`<span class="emoji">${item.emoji}</span>$${item.value}`
-spinTrack.appendChild(div)
-})
-
-const containerWidth=spinTrack.parentElement.clientWidth
-const winEl=spinTrack.children[winIndex]
-const itemCenter=winEl.offsetLeft+winEl.offsetWidth/2
-const target=-(itemCenter-containerWidth/2)
-
-setTimeout(()=>{
-
-spinTrack.style.transition="transform 4.5s cubic-bezier(.08,.6,.2,1)"
-spinTrack.style.transform=`translateX(${target}px)`
-
-},20)
-
-setTimeout(()=>{
-
-inventoryItems.push(winner)
-renderInventory()
-
-money+=winner.value
-updateMoney()
-
-opening=false
-openBtn.disabled=false
-backBtn.disabled=false
-
-},4500)
-
-}
-
+loadData() // Load saved data first
 renderCrates()
 renderInventory()
 updateMoney()
-
 </script>
 </body>
 </html>
