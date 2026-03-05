@@ -9,69 +9,143 @@
 html,body{
 margin:0;
 height:100%;
-background:#0b0f14;
 font-family:Arial,sans-serif;
 color:#eee;
+background:radial-gradient(circle at top,#1b2433,#070a0f 70%);
 }
+
+/* APP LAYOUT */
 
 .app{
 min-height:100vh;
-padding:30px;
+padding:40px;
 box-sizing:border-box;
-max-width:1400px;
+max-width:1600px;
 margin:auto;
 }
 
-h2{margin:0 0 10px 0;font-size:32px;}
+h2{
+margin:0 0 15px 0;
+font-size:38px;
+letter-spacing:1px;
+}
+
 h3{margin:12px 0}
 
 .money{
-font-size:20px;
-margin-bottom:20px;
+font-size:22px;
+margin-bottom:25px;
+font-weight:bold;
+color:#8cffb3;
 }
 
+/* BUTTONS */
+
 button{
-background:#2c3442;
+background:linear-gradient(145deg,#3a4355,#232a38);
 border:none;
 color:white;
-padding:10px 18px;
+padding:12px 20px;
+border-radius:12px;
+cursor:pointer;
+font-weight:bold;
+font-size:15px;
+transition:.15s;
+}
+
+button:hover{
+transform:translateY(-2px);
+background:linear-gradient(145deg,#4c5870,#2e3749);
+}
+
+button:disabled{
+opacity:.4;
+cursor:not-allowed;
+transform:none;
+}
+
+/* BIG OPEN BUTTON */
+
+#openBtn{
+display:block;
+margin:35px auto 10px auto;
+font-size:22px;
+padding:18px 55px;
+border-radius:16px;
+background:linear-gradient(135deg,#4da6ff,#6e8bff);
+box-shadow:0 0 20px #4da6ff66;
+}
+
+#openBtn:hover{
+box-shadow:0 0 30px #4da6ffaa;
+}
+
+/* TABS */
+
+.tabs{
+margin-bottom:25px;
+}
+
+.tabs span{
+background:#202735;
+padding:12px 20px;
+margin-right:12px;
 border-radius:10px;
 cursor:pointer;
 font-weight:bold;
 transition:.15s;
 }
 
-button:hover{background:#3d4758}
-button:disabled{opacity:.4;cursor:not-allowed}
-
-.tabs{margin-bottom:20px;}
-
-.tabs span{
-background:#2c3442;
-padding:10px 18px;
-margin-right:10px;
-border-radius:10px;
-cursor:pointer;
+.tabs span:hover{
+background:#2d3546;
 }
+
+/* GRID */
 
 .grid{
 display:grid;
-grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-gap:16px;
+grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+gap:20px;
 }
 
-.crate,.itemBox{
-background:#1b212c;
-border-radius:14px;
-padding:18px;
+/* CRATES */
+
+.crate{
+background:linear-gradient(145deg,#1b212c,#121721);
+border-radius:16px;
+padding:22px;
 text-align:center;
+box-shadow:0 0 10px #00000055;
+transition:.18s;
+}
+
+.crate:hover{
+transform:translateY(-4px);
+box-shadow:0 0 18px #000000aa;
+}
+
+.crate h3{
+font-size:20px;
+margin-bottom:6px;
+}
+
+/* ITEMS */
+
+.itemBox{
+background:#151b25;
+border-radius:14px;
+padding:16px;
+text-align:center;
+font-size:16px;
 }
 
 .emoji{
-font-size:42px;
+font-size:46px;
 display:block;
-margin-bottom:8px;
+margin-bottom:10px;
 }
+
+/* RARITY */
 
 .common{box-shadow:0 0 8px #aaa3;}
 .uncommon{box-shadow:0 0 12px #5cff7a88;}
@@ -88,9 +162,11 @@ from{transform:scale(1);}
 to{transform:scale(1.05);}
 }
 
+/* SPIN AREA */
+
 .spinWrapper{
 width:100%;
-max-width:1000px;
+max-width:1100px;
 margin:40px auto;
 position:relative;
 }
@@ -99,15 +175,17 @@ position:relative;
 position:absolute;
 left:50%;
 transform:translateX(-50%);
-top:-25px;
-font-size:34px;
+top:-28px;
+font-size:36px;
+color:#ffd27a;
 }
 
 .spinContainer{
 overflow:hidden;
-border-radius:14px;
+border-radius:16px;
 border:2px solid #444;
 background:#06080c;
+box-shadow:0 0 18px #000 inset;
 }
 
 .spinTrack{
@@ -117,11 +195,25 @@ display:flex;
 .spinItem{
 width:170px;
 margin:8px;
-padding:20px;
+padding:22px;
 border-radius:12px;
 background:#222936;
 text-align:center;
 flex-shrink:0;
+}
+
+/* BACK BUTTON */
+
+#backBtn{
+margin-bottom:10px;
+}
+
+/* TITLE */
+
+#crateTitle{
+font-size:30px;
+text-align:center;
+margin-top:10px;
 }
 
 .hidden{display:none}
@@ -153,13 +245,14 @@ flex-shrink:0;
 <button id="backBtn" onclick="backToCrates()">← Back</button>
 
 <h3 id="crateTitle"></h3>
+<div style="text-align:center;font-size:18px;margin-bottom:10px;">
 Cost: $<span id="crateCost"></span>
+</div>
 
-<h4>Items & Chances</h4>
+<h4 style="text-align:center">Items & Chances</h4>
 <div id="lootTable" class="grid"></div>
 
-<br>
-<button id="openBtn" onclick="openCrate()">Open</button>
+<button id="openBtn" onclick="openCrate()">OPEN</button>
 
 <div class="spinWrapper">
 <div class="pointer">▼</div>
@@ -180,7 +273,7 @@ let selectedCrate=null
 let opening=false
 
 const crates=[
-
+  
 {
 name:"Bug Crate",
 cost:15,
