@@ -206,9 +206,9 @@ let animationFrame=null;
 const rarities={
 common:{weight:60,mult:0.35},
 uncommon:{weight:25,mult:0.8},
-rare:{weight:10,mult:1.6},
-epic:{weight:4,mult:4},
-legendary:{weight:1,mult:80}
+rare:{weight:10,mult:12},
+epic:{weight:4,mult:25},
+legendary:{weight:1,mult:125}
 };
 
 /* ================= CRATE BUILDER ================= */
@@ -233,16 +233,16 @@ value:Math.round(cost*rarities[i.rarity].mult)
 /* ================= CRATES ================= */
 
 const crates=[
-makeCrate("🍔 Food Crate",50,["🍎","🍕","🍔","🍣","🍰"]),
-makeCrate("🌊 Ocean Crate",100,["🐟","🐠","🦀","🦈","🐙"]),
-makeCrate("🌿 Nature Crate",150,["🍃","🌵","🌻","🌳","🍄"]),
-makeCrate("⚔️ Battle Crate",200,["🪓","🗡️","⚔️","🛡️","👑"]),
-makeCrate("🚗 Vehicle Crate",300,["🚲","🏍️","🚗","🚓","🚀"]),
-makeCrate("💎 Luxury Crate",400,["💍","⌚","👜","💎","👑"]),
-makeCrate("👻 Spooky Crate",500,["🎃","🕸️","👻","💀","🧛"]),
-makeCrate("🌌 Space Crate",650,["🛰️","🌙","🪐","👽","🌠"]),
-makeCrate("🔥 Elemental Crate",800,["💧","🌪️","🔥","⚡","🌋"]),
-makeCrate("✨ Mythic Crate",1000,["🔮","🧿","✨","🌟","🪽"])
+makeCrate("Food Crate",50,["🍎","🍕","🍔","🍣","🍰"]),
+makeCrate("Ocean Crate",100,["🐟","🐠","🦀","🦈","🐙"]),
+makeCrate("Nature Crate",150,["🍃","🌵","🌻","🌳","🍄"]),
+makeCrate("Battle Crate",250,["🪓","🗡️","⚔️","🛡️","👑"]),
+makeCrate("Vehicle Crate",500,["🚲","🏍️","🚗","🚓","🚀"]),
+makeCrate("Luxury Crate",750,["💍","⌚","👜","💎","👑"]),
+makeCrate("Spooky Crate",1000,["🎃","🕸️","👻","💀","🧛"]),
+makeCrate("Space Crate",4000,["🛰️","🌙","🪐","👽","🌠"]),
+makeCrate("Elemental Crate",8000,["💧","🌪️","🔥","⚡","🌋"]),
+makeCrate("Mythic Crate",10000,["🔮","🧿","✨","🌟","🪽"])
 ];
 
 /* ================= UI ================= */
