@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Emoji Crates</title>
+
+<style>
+
+/* ================= BASE ================= */
+
+html,body{
+    margin:0;
+    height:100%;
+    background:#0b0f14;
+    font-family:Arial, sans-serif;
+    color:#eee;
+}
+
+.app{
+    min-height:100vh;
+    padding:30px;
+    box-sizing:border-box;
+    max-width:1400px;
+    margin:auto;
+}
+
+h2{margin:0 0 10px 0;font-size:32px;}
+h3{margin:12px 0}
+
+.money{
+    font-size:20px;
+    margin-bottom:20px;
+}
+
+/* ================= BUTTONS ================= */
+
+button{
+    background:#2c3442;
+    border:none;
+    color:white;
+    padding:10px 18px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:.15s;
+}
+
+button:hover{background:#3d4758}
+button:disabled{opacity:.4;cursor:not-allowed}
+
+/* ================= TABS ================= */
+
+.tabs{margin-bottom:20px;}
+
+.tabs span{
+    background:#2c3442;
+    padding:10px 18px;
+    margin-right:10px;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+/* ================= GRID ================= */
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:16px;
+}
+
+/* ================= CARDS ================= */
+
+.crate,.itemBox{
+    background:#1b212c;
+    border-radius:14px;
+    padding:18px;
+    text-align:center;
+}
+
+/* ================= EMOJI ================= */
+
+.emoji{
+    font-size:42px;
+    display:block;
+    margin-bottom:8px;
+}
+
+/* ================= RARITY GLOW ================= */
+
+.common{box-shadow:0 0 8px #aaa3;}
+.uncommon{box-shadow:0 0 12px #5cff7a88;}
+.rare{box-shadow:0 0 16px #4da6ff99;}
+.epic{box-shadow:0 0 22px #c05cffaa;}
+
+.legendary{
+    box-shadow:
+        0 0 12px #ffb347,
+        0 0 28px #ffb347,
+        0 0 45px #ffb347;
+    animation:legendGlow 1.2s infinite alternate;
+}
+
+@keyframes legendGlow{
+    from{transform:scale(1);}
+    to{transform:scale(1.05);}
+}
+
+/* ================= SPINNER ================= */
+
+.spinWrapper{
+    width:100%;
+    max-width:1000px;
+    margin:40px auto;
+    position:relative;
+}
+
+.pointer{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    top:-25px;
+    font-size:34px;
+}
+
+.spinContainer{
+    overflow:hidden;
+    border-radius:14px;
+    border:2px solid #444;
+    background:#06080c;
+}
+
+.spinTrack{
+    display:flex;
+}
+
+.spinItem{
+    width:170px;
+    margin:8px;
+    padding:20px;
+    border-radius:12px;
+    background:#222936;
+    text-align:center;
+    flex-shrink:0;
+}
+
+.hidden{display:none}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<h2>Emoji Crates</h2>
+<div class="money">Money: $<span id="moneyEl">500</span></div>
+
+<div class="tabs">
+<span onclick="showTab('cratesTab')">Crates</span>
+<span onclick="showTab('inventoryTab')">Inventory</span>
+</div>
+
+<div id="cratesTab"></div>
+
+<div id="inventoryTab" class="hidden">
+<h3>Inventory</h3>
+<div id="inventory" class="grid"></div>
+</div>
+
+<div id="openScreen" class="hidden">
+
+<button id="backBtn" onclick="backToCrates()">← Back</button>
+
+<h3 id="crateTitle"></h3>
+Cost: $<span id="crateCost"></span>
+
+<h4>Items & Chances</h4>
+<div id="lootTable" class="grid"></div>
+
+<br>
+<button id="openBtn" onclick="openCrate()">Open</button>
+
+<div class="spinWrapper">
+<div class="pointer">▼</div>
+<div class="spinContainer">
+<div id="spinTrack" class="spinTrack"></div>
+</div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* ================= STATE ================= */
+
+let money=500;
+let inventoryItems=[];
+let selectedCrate=null;
+let opening=false;
+let animationFrame=null;
+
+/* ================= RARITIES ================= */
+
+const rarities={
+common:{weight:60,mult:0.35},
+uncommon:{weight:25,mult:0.8},
+rare:{weight:10,mult:1.6},
+epic:{weight:4,mult:4},
+legendary:{weight:1,mult:80}
+};
+
+/* ================= CRATE BUILDER ================= */
+
+function makeCrate(name,cost,emojis){
+return{
+name,
+cost,
+items:[
+{emoji:emojis[0],rarity:"common"},
+{emoji:emojis[1],rarity:"uncommon"},
+{emoji:emojis[2],rarity:"rare"},
+{emoji:emojis[3],rarity:"epic"},
+{emoji:emojis[4],rarity:"legendary"}
+].map(i=>({
+...i,
+value:Math.round(cost*rarities[i.rarity].mult)
+}))
+};
+}
+
+/* ================= CRATES ================= */
+
+const crates=[
+makeCrate("🍔 Food Crate",50,["🍎","🍕","🍔","🍣","🍰"]),
+makeCrate("🌊 Ocean Crate",100,["🐟","🐠","🦀","🦈","🐙"]),
+makeCrate("🌿 Nature Crate",150,["🍃","🌵","🌻","🌳","🍄"]),
+makeCrate("⚔️ Battle Crate",200,["🪓","🗡️","⚔️","🛡️","👑"]),
+makeCrate("🚗 Vehicle Crate",300,["🚲","🏍️","🚗","🚓","🚀"]),
+makeCrate("💎 Luxury Crate",400,["💍","⌚","👜","💎","👑"]),
+makeCrate("👻 Spooky Crate",500,["🎃","🕸️","👻","💀","🧛"]),
+makeCrate("🌌 Space Crate",650,["🛰️","🌙","🪐","👽","🌠"]),
+makeCrate("🔥 Elemental Crate",800,["💧","🌪️","🔥","⚡","🌋"]),
+makeCrate("✨ Mythic Crate",1000,["🔮","🧿","✨","🌟","🪽"])
+];
+
+/* ================= UI ================= */
+
+function showTab(id){
+if(opening) return;
+cratesTab.classList.add("hidden");
+inventoryTab.classList.add("hidden");
+openScreen.classList.add("hidden");
+document.getElementById(id).classList.remove("hidden");
+}
+
+function updateMoney(){moneyEl.textContent=money;}
+
+function renderInventory(){
+inventory.innerHTML="";
+inventoryItems.forEach(i=>{
+const d=document.createElement("div");
+d.className="itemBox "+i.rarity;
+d.innerHTML=`<span class="emoji">${i.emoji}</span>$${i.value}`;
+inventory.appendChild(d);
+});
+}
+
+function renderCrates(){
+cratesTab.innerHTML="<h3>Crates</h3><div class='grid'></div>";
+const grid=cratesTab.querySelector(".grid");
+
+crates.forEach((c,i)=>{
+const d=document.createElement("div");
+d.className="crate";
+d.innerHTML=`<h3>${c.name}</h3>
+<p>$${c.cost}</p>
+<button onclick="selectCrate(${i})">Open</button>`;
+grid.appendChild(d);
+});
+}
+
+/* ================= VIEW ================= */
+
+function selectCrate(i){
+selectedCrate=crates[i];
+showTab("openScreen");
+
+crateTitle.textContent=selectedCrate.name;
+crateCost.textContent=selectedCrate.cost;
+
+lootTable.innerHTML="";
+
+let total=0;
+selectedCrate.items.forEach(x=>total+=rarities[x.rarity].weight);
+
+selectedCrate.items.forEach(x=>{
+const chance=(rarities[x.rarity].weight/total*100).toFixed(2);
+
+const d=document.createElement("div");
+d.className="itemBox "+x.rarity;
+d.innerHTML=`<span class="emoji">${x.emoji}</span>
+$${x.value}<br>${chance}%`;
+lootTable.appendChild(d);
+});
+}
+
+function backToCrates(){
+if(opening) return;
+spinTrack.innerHTML="";
+spinTrack.style.transform="translateX(0)";
+showTab("cratesTab");
+}
+
+/* ================= RNG ================= */
+
+function rollItem(crate){
+const pool=[];
+crate.items.forEach(i=>{
+for(let w=0;w<rarities[i.rarity].weight;w++)
+pool.push(i);
+});
+return pool[Math.floor(Math.random()*pool.length)];
+}
+
+/* ================= SPIN (FIXED) ================= */
+
+function openCrate(){
+
+if(opening || money < selectedCrate.cost) return;
+
+opening=true;
+openBtn.disabled=true;
+backBtn.disabled=true;
+
+if(animationFrame){
+cancelAnimationFrame(animationFrame);
+animationFrame=null;
+}
+
+spinTrack.style.transform="translateX(0)";
+spinTrack.innerHTML="";
+spinTrack.offsetHeight;
+
+money-=selectedCrate.cost;
+updateMoney();
+
+const winner=rollItem(selectedCrate);
+
+const reel=[];
+for(let i=0;i<80;i++){
+reel.push(selectedCrate.items[
+Math.floor(Math.random()*selectedCrate.items.length)
+]);
+}
+
+const winIndex=60;
+reel[winIndex]=winner;
+
+reel.forEach(item=>{
+const div=document.createElement("div");
+div.className="spinItem "+item.rarity;
+div.innerHTML=`<span class="emoji">${item.emoji}</span>$${item.value}`;
+spinTrack.appendChild(div);
+});
+
+requestAnimationFrame(()=>{
+
+const containerWidth=spinTrack.parentElement.clientWidth;
+const winEl=spinTrack.children[winIndex];
+
+const itemCenter=
+winEl.offsetLeft + winEl.offsetWidth/2;
+
+const target=-(itemCenter-containerWidth/2);
+
+const duration=4500;
+const start=performance.now();
+
+function animate(now){
+
+let t=(now-start)/duration;
+if(t>1)t=1;
+
+const ease=1-Math.pow(1-t,4);
+
+spinTrack.style.transform=
+`translateX(${target*ease}px)`;
+
+if(t<1){
+animationFrame=requestAnimationFrame(animate);
+}else{
+
+inventoryItems.push(winner);
+renderInventory();
+
+money+=winner.value;
+updateMoney();
+
+opening=false;
+openBtn.disabled=false;
+backBtn.disabled=false;
+}
+}
+
+animationFrame=requestAnimationFrame(animate);
+
+});
+}
+
+/* ================= INIT ================= */
+
+renderCrates();
+renderInventory();
+updateMoney();
+
+</script>
+
+</body>
+</html>
