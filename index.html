@@ -6,86 +6,72 @@
 
 <style>
 
-/* ================= BASE ================= */
-
 html,body{
-    margin:0;
-    height:100%;
-    background:#0b0f14;
-    font-family:Arial, sans-serif;
-    color:#eee;
+margin:0;
+height:100%;
+background:#0b0f14;
+font-family:Arial,sans-serif;
+color:#eee;
 }
 
 .app{
-    min-height:100vh;
-    padding:30px;
-    box-sizing:border-box;
-    max-width:1400px;
-    margin:auto;
+min-height:100vh;
+padding:30px;
+box-sizing:border-box;
+max-width:1400px;
+margin:auto;
 }
 
 h2{margin:0 0 10px 0;font-size:32px;}
 h3{margin:12px 0}
 
 .money{
-    font-size:20px;
-    margin-bottom:20px;
+font-size:20px;
+margin-bottom:20px;
 }
 
-/* ================= BUTTONS ================= */
-
 button{
-    background:#2c3442;
-    border:none;
-    color:white;
-    padding:10px 18px;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:bold;
-    transition:.15s;
+background:#2c3442;
+border:none;
+color:white;
+padding:10px 18px;
+border-radius:10px;
+cursor:pointer;
+font-weight:bold;
+transition:.15s;
 }
 
 button:hover{background:#3d4758}
 button:disabled{opacity:.4;cursor:not-allowed}
 
-/* ================= TABS ================= */
-
 .tabs{margin-bottom:20px;}
 
 .tabs span{
-    background:#2c3442;
-    padding:10px 18px;
-    margin-right:10px;
-    border-radius:10px;
-    cursor:pointer;
+background:#2c3442;
+padding:10px 18px;
+margin-right:10px;
+border-radius:10px;
+cursor:pointer;
 }
-
-/* ================= GRID ================= */
 
 .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-    gap:16px;
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+gap:16px;
 }
-
-/* ================= CARDS ================= */
 
 .crate,.itemBox{
-    background:#1b212c;
-    border-radius:14px;
-    padding:18px;
-    text-align:center;
+background:#1b212c;
+border-radius:14px;
+padding:18px;
+text-align:center;
 }
-
-/* ================= EMOJI ================= */
 
 .emoji{
-    font-size:42px;
-    display:block;
-    margin-bottom:8px;
+font-size:42px;
+display:block;
+margin-bottom:8px;
 }
-
-/* ================= RARITY GLOW ================= */
 
 .common{box-shadow:0 0 8px #aaa3;}
 .uncommon{box-shadow:0 0 12px #5cff7a88;}
@@ -93,54 +79,49 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .epic{box-shadow:0 0 22px #c05cffaa;}
 
 .legendary{
-    box-shadow:
-        0 0 12px #ffb347,
-        0 0 28px #ffb347,
-        0 0 45px #ffb347;
-    animation:legendGlow 1.2s infinite alternate;
+box-shadow:0 0 12px #ffb347,0 0 28px #ffb347,0 0 45px #ffb347;
+animation:legendGlow 1.2s infinite alternate;
 }
 
 @keyframes legendGlow{
-    from{transform:scale(1);}
-    to{transform:scale(1.05);}
+from{transform:scale(1);}
+to{transform:scale(1.05);}
 }
 
-/* ================= SPINNER ================= */
-
 .spinWrapper{
-    width:100%;
-    max-width:1000px;
-    margin:40px auto;
-    position:relative;
+width:100%;
+max-width:1000px;
+margin:40px auto;
+position:relative;
 }
 
 .pointer{
-    position:absolute;
-    left:50%;
-    transform:translateX(-50%);
-    top:-25px;
-    font-size:34px;
+position:absolute;
+left:50%;
+transform:translateX(-50%);
+top:-25px;
+font-size:34px;
 }
 
 .spinContainer{
-    overflow:hidden;
-    border-radius:14px;
-    border:2px solid #444;
-    background:#06080c;
+overflow:hidden;
+border-radius:14px;
+border:2px solid #444;
+background:#06080c;
 }
 
 .spinTrack{
-    display:flex;
+display:flex;
 }
 
 .spinItem{
-    width:170px;
-    margin:8px;
-    padding:20px;
-    border-radius:12px;
-    background:#222936;
-    text-align:center;
-    flex-shrink:0;
+width:170px;
+margin:8px;
+padding:20px;
+border-radius:12px;
+background:#222936;
+text-align:center;
+flex-shrink:0;
 }
 
 .hidden{display:none}
@@ -193,232 +174,303 @@ Cost: $<span id="crateCost"></span>
 
 <script>
 
-/* ================= STATE ================= */
-
-let money=500;
-let inventoryItems=[];
-let selectedCrate=null;
-let opening=false;
-let animationFrame=null;
-
-/* ================= RARITIES ================= */
-
-const rarities={
-common:{weight:40,mult:0.25},
-uncommon:{weight:30,mult:1.2},
-rare:{weight:22,mult:4.5},
-epic:{weight:7,mult:14},
-legendary:{weight:1,mult:125}
-};
-
-/* ================= CRATE BUILDER ================= */
-
-function makeCrate(name,cost,emojis){
-return{
-name,
-cost,
-items:[
-{emoji:emojis[0],rarity:"common"},
-{emoji:emojis[1],rarity:"uncommon"},
-{emoji:emojis[2],rarity:"rare"},
-{emoji:emojis[3],rarity:"epic"},
-{emoji:emojis[4],rarity:"legendary"}
-].map(i=>({
-...i,
-value:Math.round(cost*rarities[i.rarity].mult)
-}))
-};
-}
-
-/* ================= CRATES ================= */
+let money=500
+let inventoryItems=[]
+let selectedCrate=null
+let opening=false
 
 const crates=[
-makeCrate("Bug Crate",15,["🐜","🐝","🐞","🦗","🪲"]),
-makeCrate("Food Crate",50,["🍎","🍕","🍔","🍣","🍰"]),
-makeCrate("Ocean Crate",100,["🐟","🐠","🦀","🦈","🐙"]),
-makeCrate("Nature Crate",250,["🍃","🌵","🌻","🌳","🍄"]),
-makeCrate("Arctic Crate",500,["🧊","❄️","🏔️","🐧","🐻‍❄️"]),
-makeCrate("Jungle Crate",1000,["🐒","🐍","🦜","🐅","🌴"]),
-makeCrate("Battle Crate",1200,["🪓","🗡️","⚔️","🛡️","🔫"]),
-makeCrate("Vehicle Crate",1800,["🚲","🏍️","🚗","🚓","🚀"]),
-makeCrate("Luxury Crate",3200,["💍","⌚","👜","💎","👑"]),
-makeCrate("Spooky Crate",4500,["🎃","🕸️","👻","💀","🧛"]),
-makeCrate("Space Crate",8750,["🛰️","🌙","🪐","🌠","👽"]),
-makeCrate("Elemental Crate",12000,["💧","🌪️","🔥","⚡","🌋"]),
-makeCrate("Mythic Crate",18000,["🔮","🧿","✨","🌟","🪽"])
-];
 
-/* ================= UI ================= */
+{
+name:"Bug Crate",
+cost:15,
+items:[
+{emoji:"🐜",rarity:"common",chance:40,value:4},
+{emoji:"🐝",rarity:"uncommon",chance:30,value:18},
+{emoji:"🐞",rarity:"rare",chance:22,value:68},
+{emoji:"🦗",rarity:"epic",chance:7,value:210},
+{emoji:"🪲",rarity:"legendary",chance:1,value:1875}
+]
+},
 
-function showTab(id){
-if(opening) return;
-cratesTab.classList.add("hidden");
-inventoryTab.classList.add("hidden");
-openScreen.classList.add("hidden");
-document.getElementById(id).classList.remove("hidden");
+{
+name:"Food Crate",
+cost:50,
+items:[
+{emoji:"🍎",rarity:"common",chance:40,value:13},
+{emoji:"🍕",rarity:"uncommon",chance:30,value:60},
+{emoji:"🍔",rarity:"rare",chance:22,value:225},
+{emoji:"🍣",rarity:"epic",chance:7,value:700},
+{emoji:"🍰",rarity:"legendary",chance:1,value:6250}
+]
+},
+
+{
+name:"Ocean Crate",
+cost:100,
+items:[
+{emoji:"🐟",rarity:"common",chance:40,value:25},
+{emoji:"🐠",rarity:"uncommon",chance:30,value:120},
+{emoji:"🦀",rarity:"rare",chance:22,value:450},
+{emoji:"🦈",rarity:"epic",chance:7,value:1400},
+{emoji:"🐙",rarity:"legendary",chance:1,value:12500}
+]
+},
+
+{
+name:"Nature Crate",
+cost:250,
+items:[
+{emoji:"🍃",rarity:"common",chance:40,value:63},
+{emoji:"🌵",rarity:"uncommon",chance:30,value:300},
+{emoji:"🌻",rarity:"rare",chance:22,value:1125},
+{emoji:"🌳",rarity:"epic",chance:7,value:3500},
+{emoji:"🍄",rarity:"legendary",chance:1,value:31250}
+]
+},
+
+{
+name:"Arctic Crate",
+cost:500,
+items:[
+{emoji:"🧊",rarity:"common",chance:40,value:125},
+{emoji:"❄️",rarity:"uncommon",chance:30,value:600},
+{emoji:"🏔️",rarity:"rare",chance:22,value:2250},
+{emoji:"🐧",rarity:"epic",chance:7,value:7000},
+{emoji:"🐻‍❄️",rarity:"legendary",chance:1,value:62500}
+]
+},
+
+{
+name:"Jungle Crate",
+cost:1000,
+items:[
+{emoji:"🐒",rarity:"common",chance:40,value:250},
+{emoji:"🐍",rarity:"uncommon",chance:30,value:1200},
+{emoji:"🦜",rarity:"rare",chance:22,value:4500},
+{emoji:"🐅",rarity:"epic",chance:7,value:14000},
+{emoji:"🌴",rarity:"legendary",chance:1,value:125000}
+]
+},
+
+{
+name:"Battle Crate",
+cost:1200,
+items:[
+{emoji:"🪓",rarity:"common",chance:40,value:300},
+{emoji:"🗡️",rarity:"uncommon",chance:30,value:1440},
+{emoji:"⚔️",rarity:"rare",chance:22,value:5400},
+{emoji:"🛡️",rarity:"epic",chance:7,value:16800},
+{emoji:"🔫",rarity:"legendary",chance:1,value:150000}
+]
+},
+
+{
+name:"Vehicle Crate",
+cost:1800,
+items:[
+{emoji:"🚲",rarity:"common",chance:40,value:450},
+{emoji:"🏍️",rarity:"uncommon",chance:30,value:2160},
+{emoji:"🚗",rarity:"rare",chance:22,value:8100},
+{emoji:"🚓",rarity:"epic",chance:7,value:25200},
+{emoji:"🚀",rarity:"legendary",chance:1,value:225000}
+]
+},
+
+{
+name:"Luxury Crate",
+cost:3200,
+items:[
+{emoji:"💍",rarity:"common",chance:40,value:800},
+{emoji:"⌚",rarity:"uncommon",chance:30,value:3840},
+{emoji:"👜",rarity:"rare",chance:22,value:14400},
+{emoji:"💎",rarity:"epic",chance:7,value:44800},
+{emoji:"👑",rarity:"legendary",chance:1,value:400000}
+]
+},
+
+{
+name:"Spooky Crate",
+cost:4500,
+items:[
+{emoji:"🎃",rarity:"common",chance:40,value:1125},
+{emoji:"🕸️",rarity:"uncommon",chance:30,value:5400},
+{emoji:"👻",rarity:"rare",chance:22,value:20250},
+{emoji:"💀",rarity:"epic",chance:7,value:63000},
+{emoji:"🧛",rarity:"legendary",chance:1,value:562500}
+]
+},
+
+{
+name:"Space Crate",
+cost:8750,
+items:[
+{emoji:"🛰️",rarity:"common",chance:40,value:2188},
+{emoji:"🌙",rarity:"uncommon",chance:30,value:10500},
+{emoji:"🪐",rarity:"rare",chance:22,value:39375},
+{emoji:"🌠",rarity:"epic",chance:7,value:122500},
+{emoji:"👽",rarity:"legendary",chance:1,value:1093750}
+]
+},
+
+{
+name:"Elemental Crate",
+cost:12000,
+items:[
+{emoji:"💧",rarity:"common",chance:40,value:3000},
+{emoji:"🌪️",rarity:"uncommon",chance:30,value:14400},
+{emoji:"🔥",rarity:"rare",chance:22,value:54000},
+{emoji:"⚡",rarity:"epic",chance:7,value:168000},
+{emoji:"🌋",rarity:"legendary",chance:1,value:1500000}
+]
+},
+
+{
+name:"Mythic Crate",
+cost:18000,
+items:[
+{emoji:"🔮",rarity:"common",chance:40,value:4500},
+{emoji:"🧿",rarity:"uncommon",chance:30,value:21600},
+{emoji:"✨",rarity:"rare",chance:22,value:81000},
+{emoji:"🌟",rarity:"epic",chance:7,value:252000},
+{emoji:"🪽",rarity:"legendary",chance:1,value:2250000}
+]
 }
 
-function updateMoney(){moneyEl.textContent=money;}
+]
+
+function rollItem(crate){
+let r=Math.random()*100
+let sum=0
+for(let item of crate.items){
+sum+=item.chance
+if(r<=sum)return item
+}
+return crate.items[crate.items.length-1]
+}
+
+function updateMoney(){moneyEl.textContent=money}
 
 function renderInventory(){
-inventory.innerHTML="";
+inventory.innerHTML=""
 inventoryItems.forEach(i=>{
-const d=document.createElement("div");
-d.className="itemBox "+i.rarity;
-d.innerHTML=`<span class="emoji">${i.emoji}</span>$${i.value}`;
-inventory.appendChild(d);
-});
+const d=document.createElement("div")
+d.className="itemBox "+i.rarity
+d.innerHTML=`<span class="emoji">${i.emoji}</span>$${i.value}`
+inventory.appendChild(d)
+})
 }
 
 function renderCrates(){
-cratesTab.innerHTML="<h3>Crates</h3><div class='grid'></div>";
-const grid=cratesTab.querySelector(".grid");
+cratesTab.innerHTML="<h3>Crates</h3><div class='grid'></div>"
+const grid=cratesTab.querySelector(".grid")
 
 crates.forEach((c,i)=>{
-const d=document.createElement("div");
-d.className="crate";
+const d=document.createElement("div")
+d.className="crate"
 d.innerHTML=`<h3>${c.name}</h3>
 <p>$${c.cost}</p>
-<button onclick="selectCrate(${i})">Open</button>`;
-grid.appendChild(d);
-});
+<button onclick="selectCrate(${i})">Open</button>`
+grid.appendChild(d)
+})
 }
 
-/* ================= VIEW ================= */
+function showTab(id){
+if(opening)return
+cratesTab.classList.add("hidden")
+inventoryTab.classList.add("hidden")
+openScreen.classList.add("hidden")
+document.getElementById(id).classList.remove("hidden")
+}
 
 function selectCrate(i){
-selectedCrate=crates[i];
-showTab("openScreen");
-
-crateTitle.textContent=selectedCrate.name;
-crateCost.textContent=selectedCrate.cost;
-
-lootTable.innerHTML="";
-
-let total=0;
-selectedCrate.items.forEach(x=>total+=rarities[x.rarity].weight);
+selectedCrate=crates[i]
+showTab("openScreen")
+crateTitle.textContent=selectedCrate.name
+crateCost.textContent=selectedCrate.cost
+lootTable.innerHTML=""
 
 selectedCrate.items.forEach(x=>{
-const chance=(rarities[x.rarity].weight/total*100).toFixed(2);
-
-const d=document.createElement("div");
-d.className="itemBox "+x.rarity;
-d.innerHTML=`<span class="emoji">${x.emoji}</span>
-$${x.value}<br>${chance}%`;
-lootTable.appendChild(d);
-});
+const d=document.createElement("div")
+d.className="itemBox "+x.rarity
+d.innerHTML=`<span class="emoji">${x.emoji}</span>$${x.value}<br>${x.chance}%`
+lootTable.appendChild(d)
+})
 }
 
 function backToCrates(){
-if(opening) return;
-spinTrack.innerHTML="";
-spinTrack.style.transform="translateX(0)";
-showTab("cratesTab");
+if(opening)return
+spinTrack.innerHTML=""
+spinTrack.style.transform="translateX(0)"
+showTab("cratesTab")
 }
-
-/* ================= RNG ================= */
-
-function rollItem(crate){
-const pool=[];
-crate.items.forEach(i=>{
-for(let w=0;w<rarities[i.rarity].weight;w++)
-pool.push(i);
-});
-return pool[Math.floor(Math.random()*pool.length)];
-}
-
-/* ================= SPIN (FIXED) ================= */
 
 function openCrate(){
 
-if(opening || money < selectedCrate.cost) return;
+if(opening||money<selectedCrate.cost)return
 
-opening=true;
-openBtn.disabled=true;
-backBtn.disabled=true;
+opening=true
+openBtn.disabled=true
+backBtn.disabled=true
 
-if(animationFrame){
-cancelAnimationFrame(animationFrame);
-animationFrame=null;
-}
+money-=selectedCrate.cost
+updateMoney()
 
-spinTrack.style.transform="translateX(0)";
-spinTrack.innerHTML="";
-spinTrack.offsetHeight;
+spinTrack.style.transition="none"
+spinTrack.style.transform="translateX(0)"
+spinTrack.innerHTML=""
 
-money-=selectedCrate.cost;
-updateMoney();
+spinTrack.offsetHeight
 
-const winner=rollItem(selectedCrate);
+const winner=rollItem(selectedCrate)
 
-const reel=[];
+const reel=[]
 for(let i=0;i<80;i++){
-reel.push(selectedCrate.items[
-Math.floor(Math.random()*selectedCrate.items.length)
-]);
+reel.push(selectedCrate.items[Math.floor(Math.random()*selectedCrate.items.length)])
 }
 
-const winIndex=60;
-reel[winIndex]=winner;
+const winIndex=60
+reel[winIndex]=winner
 
 reel.forEach(item=>{
-const div=document.createElement("div");
-div.className="spinItem "+item.rarity;
-div.innerHTML=`<span class="emoji">${item.emoji}</span>$${item.value}`;
-spinTrack.appendChild(div);
-});
+const div=document.createElement("div")
+div.className="spinItem "+item.rarity
+div.innerHTML=`<span class="emoji">${item.emoji}</span>$${item.value}`
+spinTrack.appendChild(div)
+})
 
-requestAnimationFrame(()=>{
+const containerWidth=spinTrack.parentElement.clientWidth
+const winEl=spinTrack.children[winIndex]
+const itemCenter=winEl.offsetLeft+winEl.offsetWidth/2
+const target=-(itemCenter-containerWidth/2)
 
-const containerWidth=spinTrack.parentElement.clientWidth;
-const winEl=spinTrack.children[winIndex];
+setTimeout(()=>{
 
-const itemCenter=
-winEl.offsetLeft + winEl.offsetWidth/2;
+spinTrack.style.transition="transform 4.5s cubic-bezier(.08,.6,.2,1)"
+spinTrack.style.transform=`translateX(${target}px)`
 
-const target=-(itemCenter-containerWidth/2);
+},20)
 
-const duration=4500;
-const start=performance.now();
+setTimeout(()=>{
 
-function animate(now){
+inventoryItems.push(winner)
+renderInventory()
 
-let t=(now-start)/duration;
-if(t>1)t=1;
+money+=winner.value
+updateMoney()
 
-const ease=1-Math.pow(1-t,4);
+opening=false
+openBtn.disabled=false
+backBtn.disabled=false
 
-spinTrack.style.transform=
-`translateX(${target*ease}px)`;
+},4500)
 
-if(t<1){
-animationFrame=requestAnimationFrame(animate);
-}else{
-
-inventoryItems.push(winner);
-renderInventory();
-
-money+=winner.value;
-updateMoney();
-
-opening=false;
-openBtn.disabled=false;
-backBtn.disabled=false;
-}
 }
 
-animationFrame=requestAnimationFrame(animate);
-
-});
-}
-
-/* ================= INIT ================= */
-
-renderCrates();
-renderInventory();
-updateMoney();
+renderCrates()
+renderInventory()
+updateMoney()
 
 </script>
-
 </body>
 </html>
