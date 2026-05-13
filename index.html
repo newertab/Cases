@@ -1065,7 +1065,7 @@ animation:legendaryReveal 5.6s cubic-bezier(.12,1,.18,1) both;
 </div>
 
 <script>
-let money = 2500
+let money = 3000
 let inventoryItems = []
 let selectedCrate = null
 let opening = false
@@ -1265,7 +1265,7 @@ items:[
 // ---------------- ECONOMY ----------------
 
 const tunedEconomy = {
-  "Bug Crate": { cost: 0, values: [1, 2, 4, 10, 35, 250] },
+  "Bug Crate": { cost: 0, values: [1, 2, 5, 25, 50, 250] },
   "Food Crate": { cost: 75, values: [8, 18, 40, 90, 150, 3000] },
   "Ocean Crate": { cost: 220, values: [45, 90, 210, 430, 8000] },
   "Nature Crate": { cost: 650, values: [120, 260, 550, 1200, 30000] },
@@ -1365,7 +1365,7 @@ function updateStats() {
 }
 
 function getExpectedValue(crate) {
-  return crate.items.reduce((sum, item) => sum + (Number(item.value || 0) * Number(item.chance || 0) / 100), 0)
+  return crate.items.reduce((sum, item) => sum + (Number(item.value || 0) * Number(item.chance || 0)), 0)
 }
 
 function getRarityLabel(rarity) {
@@ -1569,7 +1569,7 @@ function playWinAnimation(winner, winEl) {
     <div class="winFxInner">
       <div class="winFxEmoji">${winner.emoji}</div>
       <div class="winFxTitle">${getRarityLabel(rarity)} Pull</div>
-      <div class="winFxValue">$${formatMoney(winner.value)} stash value</div>
+      <div class="winFxValue">$${formatMoney(winner.value)} value</div>
     </div>
   `
 
